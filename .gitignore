@@ -3,3 +3,11 @@
 coverage
 rdoc
 pkg
+*~
+ext/pdf417/*.dll
+lib/pdf417/pdf417.so
+lib/pdf417/pdf417.bundle
+stash
+.rake_tasks
+tmp
+*.gemspec
