@@ -44,15 +44,15 @@
  */
  
 
-#ifndef __APPLE__
-#include <malloc.h>
-#endif
+// #ifndef __APPLE__
+// #include <malloc.h>
+// #endif
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include <ruby.h>
 
 
 #ifdef __cplusplus
@@ -99,7 +99,7 @@ typedef struct _pdf417class {
 static void listInit(pArrayList list) {
     list->capacity = 20;
     list->size = 0;
-    list->array = (pListElement)malloc(list->capacity * sizeof(listElement));
+    list->array = ALLOC_N(listElement, (list->capacity * sizeof(listElement))); //(pListElement)malloc(list->capacity * sizeof(listElement));
 }
 
 static void listFree(pArrayList list) {
@@ -111,7 +111,7 @@ static void listAdd(pArrayList list, char type, int start, int end) {
     if (list->size == list->capacity) {
         pListElement temp;
         list->capacity *= 2;
-        temp = (pListElement)malloc(list->capacity * sizeof(listElement));
+        temp = ALLOC_N(listElement, (list->capacity * sizeof(listElement))); //(pListElement)malloc(list->capacity * sizeof(listElement));
         memcpy(temp, list->array, list->size * sizeof(listElement));
         free(list->array);
         list->array = temp;
@@ -208,7 +208,7 @@ static void outPaintCode(pPdf417class p) {
     int column;
     p->param->bitColumns = START_CODE_SIZE * (p->param->codeColumns + 3) + STOP_SIZE;
     p->param->lenBits = ((p->param->bitColumns - 1) / 8 + 1) * p->param->codeRows;
-    p->param->outBits = (char*)malloc(p->param->lenBits);
+    p->param->outBits = ALLOC_N(char, p->param->lenBits); //(char*)malloc(p->param->lenBits);
     memset(p->param->outBits, 0, p->param->lenBits);
     for (row = 0; row < p->param->codeRows; ++row) {
         p->bitPtr = ((p->param->bitColumns - 1) / 8 + 1) * 8 * row;
@@ -758,7 +758,7 @@ void paintCode(pPdf417param p) {
         }
         listInit(&list);
         breakString(&pp, &list);
-        dumpList(&pp, &list);
+        // dumpList(&pp, &list);
         assemble(&pp, &list);
         listFree(&list);
         if (p->error)

@@ -53,4 +53,6 @@ Rake::RDocTask.new do |rdoc|
   rdoc.title = "pdf417 #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.rdoc_files.include("*.rdoc")
+  rdoc.rdoc_files.include("ext/pdf417/*.c")
 end
