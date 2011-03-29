@@ -12,4 +12,3 @@ lib/pdf417/Makefile
 stash
 .rake_tasks
 tmp
-*.gemspec
