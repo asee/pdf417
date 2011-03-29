@@ -1,6 +1,34 @@
 = pdf417
 
-Description goes here.
+A wrapper for the pdf417lib C Library, from the README:
+
+    A library to generate the 2D barcode PDF417
+
+    Project: http://sourceforge.net/projects/pdf417.lib
+    Creator: Paulo Soares (psoares@consiste.pt)
+    License: LGPL or MPL 1.1
+
+    This library generates a PDF417 image of the barcode in a 1x1 scale.
+    It requires that the displayed image be as least stretched 3 times
+    in the vertical direction in relation with the horizontal dimension.
+    
+Fetching the codewords only can be handy for using rtex and the pst-barcode package.  If you're using prawn
+or RMagic the to_blob function should help generate a complete barcode.
+
+== Usage
+
+There are a few ways to use the library, at its simplest:
+
+  PDF417.encode_text("readable barcode data") => [12, 827, 120, 90, 41, 146, 30, 512, 423, 146, 90, 570]
+  
+If you want to get the bitmap:
+
+ barcode = PDF417.new("readable barcode data")
+ barcode.to_blob  # oops, wrong text
+ barcode.text = "ACTUAL barcode data"
+ barcode.to_blob
+ 
+See the RDocs for more information.
 
 == Note on Patches/Pull Requests
  

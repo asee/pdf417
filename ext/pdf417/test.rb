@@ -1,3 +1,4 @@
+# Basic testing file, run via make clean && ruby extconf.rb && make && ruby test.rb
 require 'pdf417'
 
 class PDF417

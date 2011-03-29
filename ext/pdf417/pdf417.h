@@ -9,7 +9,7 @@
   (_str ? PDF417_STR_NEW2(_str) : Qnil)
 
 VALUE rb_cPdf417;
-extern VALUE rb_pdf417_encode_text(VALUE self, VALUE text);
+static VALUE rb_pdf417_encode_text(VALUE self, VALUE text);
 static VALUE rb_pdf417_codewords(VALUE self);
 static VALUE rb_pdf417_to_blob(VALUE self);
 static VALUE rb_pdf417_new(VALUE class, VALUE text);

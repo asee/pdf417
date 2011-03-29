@@ -5,8 +5,10 @@ rdoc
 pkg
 *~
 ext/pdf417/*.dll
-lib/pdf417/pdf417.so
-lib/pdf417/pdf417.bundle
+lib/pdf417/*.so
+lib/pdf417/*.bundle
+lib/pdf417/*.o
+lib/pdf417/Makefile
 stash
 .rake_tasks
 tmp
