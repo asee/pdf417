@@ -33,6 +33,7 @@ Gem::Specification.new do |s|
      "ext/pdf417/pdf417libimp.h",
      "ext/pdf417/test.rb",
      "lib/pdf417.rb",
+     "pdf417.gemspec",
      "test/pdf417_test.rb",
      "test/test_helper.rb"
   ]
