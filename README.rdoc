@@ -15,6 +15,8 @@ A wrapper for the pdf417lib C Library, from the README:
 Fetching the codewords only can be handy for using rtex and the pst-barcode package.  If you're using prawn
 or RMagic the to_blob function should help generate a complete barcode.
 
+Much of this was based off of reading through the Nokogiri and RMagic source code.  Thanks!
+
 == Usage
 
 There are a few ways to use the library, at its simplest:

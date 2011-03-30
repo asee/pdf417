@@ -39,7 +39,6 @@ void Init_pdf417() {
   rb_define_method(rb_cPdf417, "code_columns", rb_pdf417_codeColumns, 0);
   rb_define_method(rb_cPdf417, "codeword_length", rb_pdf417_lenCodewords, 0);
   rb_define_method(rb_cPdf417, "error_level", rb_pdf417_errorLevel, 0);
-  rb_define_method(rb_cPdf417, "generation_options", rb_pdf417_options, 0);
   rb_define_method(rb_cPdf417, "aspect_ratio", rb_pdf417_aspectRatio, 0);
   rb_define_method(rb_cPdf417, "y_height", rb_pdf417_yHeight, 0);
   rb_define_method(rb_cPdf417, "generation_error", rb_pdf417_error, 0);  
@@ -96,6 +95,7 @@ static VALUE rb_pdf417_new(VALUE class, VALUE text) {
   pdf417param *ptr;
   VALUE tdata = Data_Make_Struct(class, pdf417param, 0, rb_pdf417_cleanup, ptr);
   pdf417init(ptr);
+  rb_iv_set(tdata, "@generation_options", INT2NUM(ptr->options));
   argv[0] = text;
   rb_obj_call_init(tdata, 1, argv);
   return tdata;
@@ -112,15 +112,7 @@ static VALUE rb_pdf417_codewords(VALUE self) {
   int k;
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
-  
-  // Only re-do it if our text has changed
-  if ( ptr->text != STR2CSTR(rb_iv_get(self, "@text")) ) {
-    ptr->text = STR2CSTR(rb_iv_get(self, "@text")); //StringValuePtr(text); 
-
-    paintCode(ptr); //paintCode also sets the error correction, we call it here so we can get the blob if needed w/o trouble
-  }
-  
-  // otherwise, fill the array and respond
+  refreshStruct(self, ptr);
   if (ptr->error) {
       return Qnil; //could also return list
   }
@@ -143,15 +135,7 @@ static VALUE rb_pdf417_codewords(VALUE self) {
 static VALUE rb_pdf417_to_blob(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
-  
-  // Only re-do it if our text has changed
-  if ( ptr->text != STR2CSTR(rb_iv_get(self, "@text")) ) {
-    ptr->text = STR2CSTR(rb_iv_get(self, "@text")); //StringValuePtr(text); 
-
-    paintCode(ptr);
-  }
-  
-  // otherwise, fill the array and respond
+  refreshStruct(self, ptr);
   if (ptr->error) {
       return Qnil; //could also return list
   }
@@ -233,26 +217,6 @@ static VALUE rb_pdf417_errorLevel(VALUE self){
 
 /*
  * call-seq:
- *  generation_options
- *
- * The int representing the options used to generate the barcode, defined in the library as:
- * [PDF417_USE_ASPECT_RATIO] use aspectRatio to set the y/x dimension. Also uses yHeight
- * [PDF417_FIXED_RECTANGLE] make the barcode dimensions at least codeColumns by codeRows
- * [PDF417_FIXED_COLUMNS] make the barcode dimensions at least codeColumns
- * [PDF417_FIXED_ROWS] make the barcode dimensions at least codeRows
- * [PDF417_AUTO_ERROR_LEVEL] automatic error level depending on text size
- * [PDF417_USE_ERROR_LEVEL] the error level is errorLevel. The used errorLevel may be different
- * [PDF417_USE_RAW_CODEWORDS] use codewords instead of text
- * [PDF417_INVERT_BITMAP] invert the resulting bitmap
- */
-static VALUE rb_pdf417_options(VALUE self){
-  pdf417param *ptr;
-  Data_Get_Struct(self, pdf417param, ptr);
-  return INT2NUM(ptr->options);
-}
-
-/*
- * call-seq:
  *  aspect_ratio
  *
  * The y/x aspect ratio
@@ -288,4 +252,30 @@ static VALUE rb_pdf417_error(VALUE self){
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->error);
+}
+
+// Refresh the PDF417 struct containing our data if anything important has changed.
+static void refreshStruct(VALUE self, pdf417param *ptr) {
+  
+  char* text = STR2CSTR(rb_iv_get(self, "@text"));
+  int options = 0;
+  VALUE generation_options = rb_iv_get(self, "@generation_options");
+  
+  if ( TYPE(generation_options) == T_FIXNUM ){
+    options = FIX2INT(generation_options);
+  }
+
+  // Only re-do it if our text has changed
+  if ( 0 != strcmp(ptr->text, text) || options != ptr->options) {
+    ptr->options = options;
+    ptr->outBits = NULL;
+    ptr->lenBits = 0;
+    ptr->error = 0;
+    ptr->lenText = -1;
+    ptr->text = "";
+    ptr->yHeight = 3;
+    ptr->aspectRatio = 0.5;
+    ptr->text = STR2CSTR(rb_iv_get(self, "@text")); 
+    paintCode(ptr); //paintCode also sets the error correction, we call it here so we can get the blob if needed w/o trouble
+  }
 }

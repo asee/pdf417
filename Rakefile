@@ -57,3 +57,9 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include("*.rdoc")
   rdoc.rdoc_files.include("ext/pdf417/*.c")
 end
+
+desc 'rebuilds the pdf417 library'
+task :build_extension do
+  pwd = `pwd`
+  exec "cd ext/pdf417 && make clean && ruby extconf.rb && make && cd #{pwd}"
+end
