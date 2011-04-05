@@ -4,11 +4,11 @@ SHELL = /bin/sh
 #### Start of system configuration section. ####
 
 srcdir = .
-topdir = /opt/ruby-enterprise-1.8.7-2010.01/lib/ruby/1.8/i686-darwin10.3.0
+topdir = /opt/rubyEE/lib/ruby/1.8/i686-darwin10.3.0
 hdrdir = $(topdir)
 VPATH = $(srcdir):$(topdir):$(hdrdir)
 exec_prefix = $(prefix)
-prefix = $(DESTDIR)/opt/ruby-enterprise-1.8.7-2010.01
+prefix = $(DESTDIR)/opt/rubyEE
 sharedstatedir = $(prefix)/com
 mandir = $(datarootdir)/man
 psdir = $(docdir)
@@ -62,7 +62,7 @@ RUBY_SO_NAME = ruby
 arch = i686-darwin10.3.0
 sitearch = i686-darwin10.3.0
 ruby_version = 1.8
-ruby = /opt/ruby-enterprise-1.8.7-2010.01/bin/ruby
+ruby = /opt/rubyEE/bin/ruby
 RUBY = $(ruby)
 RM = rm -f
 MAKEDIRS = mkdir -p

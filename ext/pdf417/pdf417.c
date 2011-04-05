@@ -1,5 +1,6 @@
 /*  NOTE:  This relies on the PDF417 Library from http://sourceforge.net/projects/pdf417lib and is included here 
- *
+ * It is a little odd and not too C-like, because it is called 'pdf417' but defines both the PDF417 and the PDF417::Lib
+ * class.  Note that the majority of the functions are for the PDF417::Lib class, the PDF417 class is only a placeholder.
 */
 
 #include <ruby.h>
@@ -27,21 +28,22 @@
 
 // The initialization method for this module
 void Init_pdf417() {
-  rb_cPdf417 = rb_define_class("PDF417", rb_cObject);
-  rb_define_singleton_method(rb_cPdf417, "encode_text", rb_pdf417_encode_text, 1);
-  rb_define_singleton_method(rb_cPdf417, "new", rb_pdf417_new, 1);
-  rb_define_method(rb_cPdf417, "initialize", rb_pdf417_init, 1);
-  rb_define_method(rb_cPdf417, "codewords", rb_pdf417_codewords, 0);
-  rb_define_method(rb_cPdf417, "to_blob", rb_pdf417_to_blob, 0);
-  rb_define_method(rb_cPdf417, "bit_columns", rb_pdf417_bitColumns, 0);
-  rb_define_method(rb_cPdf417, "bit_length", rb_pdf417_lenBits, 0);
-  rb_define_method(rb_cPdf417, "code_rows", rb_pdf417_codeRows, 0);
-  rb_define_method(rb_cPdf417, "code_columns", rb_pdf417_codeColumns, 0);
-  rb_define_method(rb_cPdf417, "codeword_length", rb_pdf417_lenCodewords, 0);
-  rb_define_method(rb_cPdf417, "error_level", rb_pdf417_errorLevel, 0);
-  rb_define_method(rb_cPdf417, "aspect_ratio", rb_pdf417_aspectRatio, 0);
-  rb_define_method(rb_cPdf417, "y_height", rb_pdf417_yHeight, 0);
-  rb_define_method(rb_cPdf417, "generation_error", rb_pdf417_error, 0);  
+  rb_cPdf417 = rb_define_class("PDF417", rb_cObject); // Our PDF417 object    
+  rb_cPdf417_Lib = rb_define_class_under(rb_cPdf417, "Lib", rb_cObject); // Our PDF417::Lib object, to represent the C file
+  rb_define_singleton_method(rb_cPdf417_Lib, "encode_text", rb_pdf417_lib_encode_text, 1);
+  rb_define_singleton_method(rb_cPdf417_Lib, "new", rb_pdf417_lib_new, 1);
+  rb_define_method(rb_cPdf417_Lib, "initialize", rb_pdf417_lib_init, 1);
+  rb_define_method(rb_cPdf417_Lib, "codewords", rb_pdf417_lib_codewords, 0);
+  rb_define_method(rb_cPdf417_Lib, "to_blob", rb_pdf417_lib_to_blob, 0);
+  rb_define_method(rb_cPdf417_Lib, "bit_columns", rb_pdf417_lib_bitColumns, 0);
+  rb_define_method(rb_cPdf417_Lib, "bit_length", rb_pdf417_lib_lenBits, 0);
+  rb_define_method(rb_cPdf417_Lib, "code_rows", rb_pdf417_lib_codeRows, 0);
+  rb_define_method(rb_cPdf417_Lib, "code_columns", rb_pdf417_lib_codeColumns, 0);
+  rb_define_method(rb_cPdf417_Lib, "codeword_length", rb_pdf417_lib_lenCodewords, 0);
+  rb_define_method(rb_cPdf417_Lib, "error_level", rb_pdf417_lib_errorLevel, 0);
+  rb_define_method(rb_cPdf417_Lib, "aspect_ratio", rb_pdf417_lib_aspectRatio, 0);
+  rb_define_method(rb_cPdf417_Lib, "y_height", rb_pdf417_lib_yHeight, 0);
+  rb_define_method(rb_cPdf417_Lib, "generation_error", rb_pdf417_lib_error, 0);  
 }
 
 /*
@@ -50,7 +52,7 @@ void Init_pdf417() {
  *
  * Returns an array of integers showing the codewords
  */
-static VALUE rb_pdf417_encode_text(VALUE self, VALUE text) {
+static VALUE rb_pdf417_lib_encode_text(VALUE self, VALUE text) {
   VALUE list;
   int k;
   
@@ -74,12 +76,12 @@ static VALUE rb_pdf417_encode_text(VALUE self, VALUE text) {
 }
 
 /* :nodoc: */
-static void rb_pdf417_cleanup(void *p) {
+static void rb_pdf417_lib_cleanup(void *p) {
   pdf417free(p); 
 }
 
 /* :nodoc: */
-static VALUE rb_pdf417_init(VALUE self, VALUE text) {
+static VALUE rb_pdf417_lib_init(VALUE self, VALUE text) {
   rb_iv_set(self, "@text", text);
   return self;
 }
@@ -90,10 +92,10 @@ static VALUE rb_pdf417_init(VALUE self, VALUE text) {
  *
  * Makes a new PDF417 object for the given text string
  */
-static VALUE rb_pdf417_new(VALUE class, VALUE text) {
+static VALUE rb_pdf417_lib_new(VALUE class, VALUE text) {
   VALUE argv[1];
   pdf417param *ptr;
-  VALUE tdata = Data_Make_Struct(class, pdf417param, 0, rb_pdf417_cleanup, ptr);
+  VALUE tdata = Data_Make_Struct(class, pdf417param, 0, rb_pdf417_lib_cleanup, ptr);
   pdf417init(ptr);
   rb_iv_set(tdata, "@generation_options", INT2NUM(ptr->options));
   argv[0] = text;
@@ -107,23 +109,29 @@ static VALUE rb_pdf417_new(VALUE class, VALUE text) {
  *
  * Generates an array of codewords from the current text attribute
  */
-static VALUE rb_pdf417_codewords(VALUE self) {
-  VALUE list;
+static VALUE rb_pdf417_lib_codewords(VALUE self) {
+  VALUE list, text;
   int k;
-  pdf417param *ptr;
-  Data_Get_Struct(self, pdf417param, ptr);
-  refreshStruct(self, ptr);
-  if (ptr->error) {
-      return Qnil; //could also return list
+  pdf417param p;
+  
+  
+  text = rb_iv_get(self, "@text"); 
+  pdf417init(&p);
+  p.text = StringValuePtr(text);
+  fetchCodewords(&p);
+  if (p.error) {
+      pdf417free(&p);
+      return Qnil; //could also return list or raise something
   }
   
-  list = rb_ary_new2(ptr->lenCodewords);
+  list = rb_ary_new2(p.lenCodewords);
   
-  // The first codeword is the length of the data, which is all we're interested in here.
-  for (k = 0; k < ptr->codewords[0]; ++k) {
-    rb_ary_push(list, INT2NUM(ptr->codewords[k]));
+  pdf417free(&p); 
+  
+  for (k = 0; k < p.lenCodewords; ++k) {
+    rb_ary_push(list, INT2NUM(p.codewords[k]));
   }
-  return list;  
+  return list;
 }
 
 /*
@@ -132,10 +140,62 @@ static VALUE rb_pdf417_codewords(VALUE self) {
  *
  * Returns a binary string representing the image bits, requires scaling before display
  */
-static VALUE rb_pdf417_to_blob(VALUE self) {
+static VALUE rb_pdf417_lib_to_blob(VALUE self) {
+  VALUE generation_options, text, aspect_ratio, raw_codewords, y_height, error_level, code_rows, code_cols;
   pdf417param *ptr;
+  int options = 0;
+  
   Data_Get_Struct(self, pdf417param, ptr);
-  refreshStruct(self, ptr);
+  generation_options = rb_iv_get(self, "@generation_options");
+  text = rb_iv_get(self, "@text"); 
+  aspect_ratio = rb_iv_get(self, "@aspect_ratio");
+  raw_codewords = rb_iv_get(self, "@raw_codewords");
+  y_height = rb_iv_get(self, "@y_height");
+  error_level = rb_iv_get(self, "@error_level");
+  code_rows = rb_iv_get(self, "@code_rows");
+  code_cols = rb_iv_get(self, "@code_cols");
+  
+  // re-set our internal variables
+  pdf417init(ptr);
+  
+  // Always set the text, can't really go wrong here
+  ptr->text = StringValuePtr(text);
+  
+  // Start setting them based off of what we got
+  if ( TYPE(generation_options) == T_FIXNUM ){
+    ptr->options = FIX2INT(generation_options);
+  }
+  
+  if ( TYPE(aspect_ratio) == T_FLOAT ){
+    ptr->aspectRatio = (float)NUM2DBL(aspect_ratio);
+  }
+  
+  if ( TYPE(y_height) == T_FLOAT ){
+    ptr->yHeight = (float)NUM2DBL(y_height);
+  }
+  
+  if ( TYPE(error_level) == T_FIXNUM ){
+    ptr->errorLevel = FIX2INT(error_level);
+  }
+  
+  if ( TYPE(code_rows) == T_FIXNUM ){    
+    ptr->codeRows = FIX2INT(code_rows);
+  }
+
+  if ( TYPE(code_cols) == T_FIXNUM ){
+    ptr->codeColumns = FIX2INT(code_cols);
+  }
+    
+  if ( TYPE(raw_codewords) == T_ARRAY && ptr->options & PDF417_USE_RAW_CODEWORDS){
+    ptr->lenCodewords = RARRAY_LEN(raw_codewords);
+    int k;
+    for (k = 0; k < ptr->lenCodewords; ++k) {
+      ptr->codewords[k] = FIX2INT(rb_ary_entry(raw_codewords, k));
+    }
+  }
+  
+  paintCode(ptr); 
+  
   if (ptr->error) {
       return Qnil; //could also return list
   }
@@ -149,7 +209,7 @@ static VALUE rb_pdf417_to_blob(VALUE self) {
  *
  * The number of column bits in the bitmap
  */
-static VALUE rb_pdf417_bitColumns(VALUE self) {
+static VALUE rb_pdf417_lib_bitColumns(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->bitColumns);
@@ -161,7 +221,7 @@ static VALUE rb_pdf417_bitColumns(VALUE self) {
  *
  * The size in bytes of the bitmap
  */
-static VALUE rb_pdf417_lenBits(VALUE self) {
+static VALUE rb_pdf417_lib_lenBits(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->lenBits);
@@ -173,7 +233,7 @@ static VALUE rb_pdf417_lenBits(VALUE self) {
  *
  * The number of code rows and bitmap lines
  */
-static VALUE rb_pdf417_codeRows(VALUE self) {
+static VALUE rb_pdf417_lib_codeRows(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->codeRows);
@@ -185,7 +245,7 @@ static VALUE rb_pdf417_codeRows(VALUE self) {
  *
  * The number of code columns
  */
-static VALUE rb_pdf417_codeColumns(VALUE self) {
+static VALUE rb_pdf417_lib_codeColumns(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->codeColumns);
@@ -197,7 +257,7 @@ static VALUE rb_pdf417_codeColumns(VALUE self) {
  *
  * The size of the code words, including error correction codes
  */
-static VALUE rb_pdf417_lenCodewords(VALUE self) {
+static VALUE rb_pdf417_lib_lenCodewords(VALUE self) {
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->lenCodewords);
@@ -209,7 +269,7 @@ static VALUE rb_pdf417_lenCodewords(VALUE self) {
  *
  * The error level required 0-8
  */
-static VALUE rb_pdf417_errorLevel(VALUE self){
+static VALUE rb_pdf417_lib_errorLevel(VALUE self){
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->errorLevel);
@@ -221,7 +281,7 @@ static VALUE rb_pdf417_errorLevel(VALUE self){
  *
  * The y/x aspect ratio
  */
-static VALUE rb_pdf417_aspectRatio(VALUE self){
+static VALUE rb_pdf417_lib_aspectRatio(VALUE self){
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return rb_float_new(ptr->aspectRatio);
@@ -233,7 +293,7 @@ static VALUE rb_pdf417_aspectRatio(VALUE self){
  *
  * The y/x dot ratio
  */
-static VALUE rb_pdf417_yHeight(VALUE self){
+static VALUE rb_pdf417_lib_yHeight(VALUE self){
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return rb_float_new(ptr->yHeight);
@@ -248,34 +308,8 @@ static VALUE rb_pdf417_yHeight(VALUE self){
  * [PDF417_ERROR_TEXT_TOO_BIG] the text was too big the PDF417 specifications
  * [PDF417_ERROR_INVALID_PARAMS] invalid parameters. Only used with PDF417_USE_RAW_CODEWORDS
  */
-static VALUE rb_pdf417_error(VALUE self){
+static VALUE rb_pdf417_lib_error(VALUE self){
   pdf417param *ptr;
   Data_Get_Struct(self, pdf417param, ptr);
   return INT2NUM(ptr->error);
-}
-
-// Refresh the PDF417 struct containing our data if anything important has changed.
-static void refreshStruct(VALUE self, pdf417param *ptr) {
-  
-  char* text = STR2CSTR(rb_iv_get(self, "@text"));
-  int options = 0;
-  VALUE generation_options = rb_iv_get(self, "@generation_options");
-  
-  if ( TYPE(generation_options) == T_FIXNUM ){
-    options = FIX2INT(generation_options);
-  }
-
-  // Only re-do it if our text has changed
-  if ( 0 != strcmp(ptr->text, text) || options != ptr->options) {
-    ptr->options = options;
-    ptr->outBits = NULL;
-    ptr->lenBits = 0;
-    ptr->error = 0;
-    ptr->lenText = -1;
-    ptr->text = "";
-    ptr->yHeight = 3;
-    ptr->aspectRatio = 0.5;
-    ptr->text = STR2CSTR(rb_iv_get(self, "@text")); 
-    paintCode(ptr); //paintCode also sets the error correction, we call it here so we can get the blob if needed w/o trouble
-  }
 }

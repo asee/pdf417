@@ -4,7 +4,7 @@ A wrapper for the pdf417lib C Library, from the README:
 
     A library to generate the 2D barcode PDF417
 
-    Project: http://sourceforge.net/projects/pdf417.lib
+    Project: http://pdf417lib.sourceforge.net/
     Creator: Paulo Soares (psoares@consiste.pt)
     License: LGPL or MPL 1.1
 

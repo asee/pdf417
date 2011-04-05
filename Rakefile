@@ -61,5 +61,6 @@ end
 desc 'rebuilds the pdf417 library'
 task :build_extension do
   pwd = `pwd`
-  exec "cd ext/pdf417 && make clean && ruby extconf.rb && make && cd #{pwd}"
+  system "cd ext/pdf417 && make clean"
+  system "cd ext/pdf417 && ruby extconf.rb && make"
 end

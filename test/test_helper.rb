@@ -7,6 +7,7 @@ require 'pdf417'
 require 'rubygems'
 require 'test/unit'
 require 'shoulda'
+require 'ruby-debug'
 
 
 class Test::Unit::TestCase
