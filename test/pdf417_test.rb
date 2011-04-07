@@ -17,7 +17,7 @@ class Pdf417Test < Test::Unit::TestCase
     assert_equal [4, 815, 514, 119], PDF417.new(:text => "fred").codewords
   end
   
-  should "re-generate if the text has been reassigned" do
+  should "re-generate codewords if the text has been reassigned" do
     b = PDF417.new("fred")
     fred_words = b.codewords
     fred_blob = b.to_blob
@@ -58,5 +58,100 @@ class Pdf417Test < Test::Unit::TestCase
       b.to_blob
     end
   end
+  
+  context "after generating" do
+    setup do
+      @barcode = PDF417.new("test")
+      @barcode.generate!
+      @blob = @barcode.blob
+    end
+    
+    should "have a blob" do
+      assert_not_nil @barcode.blob
+      assert_not_nil @barcode.to_blob
+    end
+    
+    should "know bit columns" do
+      assert_not_nil @barcode.bit_columns
+    end
+    
+    should "know rows" do
+      assert_not_nil @barcode.rows
+    end
+    
+    should "know cols" do
+      assert_not_nil @barcode.cols
+    end
+    
+    should "know error level" do
+      assert_not_nil @barcode.error_level
+    end
+    
+    should "know aspect ratio" do
+      assert_not_nil @barcode.aspect_ratio
+    end
+    
+    should "know y height" do
+      assert_not_nil @barcode.y_height
+    end
+    
+    should "regenerate after rows changed" do
+      @barcode.rows = 10
+      assert_not_equal @blob, @barcode.to_blob
+    end
+    
+    should "regenerate after cols changed" do
+      @barcode.cols = 10
+      assert_not_equal @blob, @barcode.to_blob
+    end
+    
+    should "regenerate after error level changed" do
+      @barcode.error_level = 7
+      assert_not_equal @blob, @barcode.to_blob
+    end
+    
+    should "regenerate after raw codewords changed" do
+      @barcode.raw_codewords = @barcode.codewords + [245, 123]
+      @barcode.raw_codewords[0] = @barcode.raw_codewords.length
+      assert_not_equal @blob, @barcode.to_blob
+    end
+    
+    should "regenerate invert bitmap changed" do
+      @barcode.invert_bitmap = !@barcode.invert_bitmap
+      assert_not_equal @blob, @barcode.to_blob
+    end
+    
+    should "regenerate after aspect ratio changed" do
+      # Aspect ratio does not apply when both rows and cols are set, so re-set our 
+      # reference and make sure there is enough data to have rows and cols
+      @barcode.text = "SOME REALLY LONG TEXT HERE! Gonna need some rows...." * 10
+      @barcode.rows = nil
+      @barcode.cols = 2
+      @barcode.error_level = 3
+      @blob = @barcode.to_blob
+      @barcode.aspect_ratio = 1000
+      assert_not_equal @blob, @barcode.to_blob
+    end
+
+    should "regenerate after y height changed" do
+      # Y Height does not apply when both rows and cols are set, so re-set our 
+      # reference and make sure there is enough data to have rows and cols
+      @barcode.text = "SOME REALLY LONG TEXT HERE! Gonna need some rows...." * 10
+      @barcode.rows = nil
+      @barcode.cols = 2
+      @barcode.error_level = 3
+      @blob = @barcode.to_blob
+      @barcode.y_height = 4
+      assert_not_equal @blob, @barcode.to_blob
+    end
+  end
+  
+  should "know max rows after generating out of bounds" do
+    b = PDF417.new(:rows => 1000000, :text => "test")
+    b.generate!
+    assert_not_equal 1000000, b.rows
+  end
+  
+  
   
 end

@@ -29,6 +29,7 @@ class PDF417::Lib
   #
   # For example
   #   b.generation_options = PDF417::PDF417_INVERT_BITMAP | PDF417::PDF417_AUTO_ERROR_LEVEL
+  
   attr_accessor :generation_options, :text, :raw_codewords, :y_height, :code_rows, :code_cols, :error_level, :aspect_ratio 
   def inspect # :nodoc:
     attributes = inspect_attributes.reject { |x|

@@ -10,23 +10,7 @@ class PDF417
       PDF417::Lib.encode_text(text)
     end    
   end
-  
-  # The text to encode
-  attr_accessor :text
-  # Y Height
-  attr_accessor :y_height
-  # Aspect ratio
-  attr_accessor :aspect_ratio
-  # For setting the codewords directly
-  attr_accessor :raw_codewords
-  # Make the barcode at least this number of rows
-  attr_accessor :rows
-  # Make the barcode at least this number of columns
-  attr_accessor :cols
-  # Request the specified error level must be between 0 and 8
-  attr_accessor :error_level
-  # Invert the bitmap?
-  attr_accessor :invert_bitmap
+
   # The number of columns in the bitmap
   attr_reader :bit_columns
   
@@ -44,11 +28,14 @@ class PDF417
     self.text ||= ""
     @y_height = 3
     @aspect_ratio = 0.5
+    @rows = 1
+    @cols = 0
+    @blob = nil
   end
   
   
   def text=(val)
-    @codewords = nil
+    @codewords = @blob = nil
     @text = val
   end
   
@@ -68,8 +55,72 @@ class PDF417
   def invert_bitmap?
     !! self.invert_bitmap
   end
+      
+  # Y Height
+  def y_height
+    @text
+  end
+  def y_height=(val)
+    @blob = nil
+    @y_height = val
+  end
+    
+  # Aspect ratio
+  def aspect_ratio
+    @aspect_ratio
+  end
+  def aspect_ratio=(val)
+    @blob = nil
+    @aspect_ratio = val
+  end
+    
+  # For setting the codewords directly
+  def raw_codewords
+    @raw_codewords
+  end
+  def raw_codewords=(val)
+    @blob = nil
+    @raw_codewords = val
+  end
+    
+  # Make the barcode at least this number of rows
+  def rows
+    @rows
+  end
+  def rows=(val)
+    @blob = nil
+    @rows = val
+  end
+    
+  # Make the barcode at least this number of columns
+  def cols
+    @cols
+  end
+  def cols=(val)
+    @blob = nil
+    @cols = val
+  end
+    
+  # Request the specified error level must be between 0 and 8
+  def error_level
+    @error_level
+  end
+  def error_level=(val)
+    @blob = nil
+    @error_level = val
+  end
+    
+  # Invert the bitmap?
+  def invert_bitmap
+    @invert_bitmap
+  end
   
-  def to_blob
+  def invert_bitmap=(val)
+    @blob = nil
+    @invert_bitmap = val
+  end
+  
+  def generate!
     lib = Lib.new(text)
     options = []
     # Setting the text via accessor will set the codewords to nil, but if they have
@@ -79,15 +130,15 @@ class PDF417
       lib.generation_options |= Lib::PDF417_USE_RAW_CODEWORDS
       options << 'raw codewords'
     end
-    
+  
     if self.invert_bitmap?
       lib.generation_options |= Lib::PDF417_INVERT_BITMAP
       options << 'inverting bitmap'
     end
-    
+  
     if self.rows.to_i > 0 && self.cols.to_i > 0
-      lib.code_rows = self.rows
-      lib.code_cols = self.cols
+      lib.code_rows = self.rows.to_i
+      lib.code_cols = self.cols.to_i
       lib.generation_options |= Lib::PDF417_FIXED_RECTANGLE
       options << "#{rows}x#{cols}"
     elsif self.rows.to_i > 0
@@ -99,39 +150,47 @@ class PDF417
       lib.generation_options |= Lib::PDF417_FIXED_COLUMNS
       options << "#{cols} cols"
     end
-    
+  
     if self.error_level.to_i >= 0 && self.error_level.to_i <= 8
       lib.error_level = self.error_level.to_i
       lib.generation_options |= Lib::PDF417_USE_ERROR_LEVEL
       options << "requested #{error_level.to_i} error level"
     end
-    
+  
     lib.aspect_ratio = self.aspect_ratio.to_f
     lib.y_height = self.y_height.to_f
-    
-    (blob = lib.to_blob)
-    if blob.nil?
+  
+    (@blob = lib.to_blob)
+    if @blob.nil?
       if lib.generation_error == Lib::PDF417_ERROR_TEXT_TOO_BIG
         raise GenerationError, "Text is too big"
       elsif lib.generation_error == Lib::PDF417_ERROR_INVALID_PARAMS
-        raise GenerationError, "Invalid parameters: #{options.join(', ')}"
+        msg = "Invalid parameters: #{options.join(', ')}"
+        if lib.generation_options & Lib::PDF417_USE_RAW_CODEWORDS && lib.raw_codewords.length != lib.raw_codewords.first
+          msg +=".  The first element of the raw codwords must be the length of the array.  Currently it is #{lib.raw_codewords.first}, perhaps it should be #{lib.raw_codewords.length}?"
+        end
+        raise GenerationError, msg
       else
         raise GenerationError, "Could not generate bitmap: #{options.join(', ')}"
       end
     else
-      
       @codewords = lib.codewords
       @bit_columns = lib.bit_columns
-      @rows = lib.code_rows
+      @rows = lib.code_rows 
       @cols = lib.code_columns
       @error_level = lib.error_level
       @aspect_ratio = lib.aspect_ratio
       @y_height = lib.y_height
-      
-      blob
+      return true
     end
-    
   end
+    
+  
+  def to_blob
+    self.generate! if @blob.nil?
+    @blob    
+  end      
+  alias_method :blob, :to_blob
   
 
   
