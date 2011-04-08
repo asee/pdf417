@@ -1,3 +1,8 @@
+begin
+  require "RMagick"
+rescue LoadError
+end
+
 require 'test_helper'
 
 class Pdf417Test < Test::Unit::TestCase
@@ -75,6 +80,14 @@ class Pdf417Test < Test::Unit::TestCase
       assert_not_nil @barcode.bit_columns
     end
     
+    should "know bit rows" do
+      assert_not_nil @barcode.bit_length
+    end
+    
+    should "know bit length" do
+      assert_not_nil @barcode.bit_length
+    end
+    
     should "know rows" do
       assert_not_nil @barcode.rows
     end
@@ -150,6 +163,24 @@ class Pdf417Test < Test::Unit::TestCase
     b = PDF417.new(:rows => 1000000, :text => "test")
     b.generate!
     assert_not_equal 1000000, b.rows
+  end
+  
+  
+  if Object.const_defined? "Magick"
+    context "using RMagick" do
+      setup do
+        @barcode = PDF417.new("test text" * 100)
+        @barcode.generate!
+      end
+      
+      should "make an image" do
+        # @barcode.to_blob.split(//).collect{|x| x.unpack("B*")}.to_s.inspect
+        image = Magick::Image::from_blob(@barcode.to_blob).first
+        puts "Width: #{image.columns}; Height: #{image.rows}"
+      end
+    end      
+  else
+    puts "*** Skipping rmagick tests"
   end
   
   

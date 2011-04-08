@@ -11,8 +11,7 @@ class PDF417
     end    
   end
 
-  # The number of columns in the bitmap
-  attr_reader :bit_columns
+  attr_reader :bit_columns, :bit_rows, :bit_length
   
   def initialize(*attrs)
     if attrs.first.is_a?(String)
@@ -176,6 +175,8 @@ class PDF417
     else
       @codewords = lib.codewords
       @bit_columns = lib.bit_columns
+      # @bit_rows = (lib.bit_columns / 8) + 1
+      @bit_length = lib.bit_length
       @rows = lib.code_rows 
       @cols = lib.code_columns
       @error_level = lib.error_level
@@ -191,6 +192,40 @@ class PDF417
     @blob    
   end      
   alias_method :blob, :to_blob
+  
+  def encoding
+    self.generate! if @blob.nil?
+
+    cols = self.bit_columns / 8 + 1
+    # The below sets it up so that @blob.unpack("B*").first == enc.join
+    # The barby library has
+    #         row << sprintf("%08b", (byte & 0xff) | 0x100)
+    # Not sure what that's about, Binary OR Operator copies a bit if it exists in eather operand 0x100 = 265, eg, ensuring everything is >= 256
+    # Enc yields an array of strings, such as:
+    # ["11111111010101000111010101110000001111010100111100010000010111011100111101010111100001111111010001010010", "11111111010101000111101010010000001110001001101000010100111111011100111110101011000001111111010001010010", "11111111010101000111010101111110001010010001111000010111100111011100101010011110000001111111010001010010", "011010110100111001001111010101000100111101010000"]
+    # enc = []
+    # row = nil
+    # n = 0
+    # @blob.each_byte do |byte|
+    #   if n%cols == 0
+    #     row = ""
+    #     enc << row
+    #   end
+    #   row << sprintf("%08b", (byte & 0xff))
+    #   n += 1
+    # end
+    # enc
+    
+    # NOTE:  Couldn't cols also be self.rows??
+    
+    # This matches the output from the pdf417 lib sample output, for each byte try sprintf("%02X", byte) to get the hex, or sprintf("%08b", byte) to get the binary
+    enc = b.blob.bytes.to_a.each_slice(cols).to_a
+    
+    return enc.collect do |row_of_bytes|
+      row_of_bytes.collect{|x| sprintf("%08b", x)}.join
+    end
+  end
+
   
 
   
