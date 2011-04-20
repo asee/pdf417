@@ -14,6 +14,13 @@ class PDF417
   attr_reader :bit_columns, :bit_rows, :bit_length
   
   def initialize(*attrs)
+    # TODO:  Test these defaults, make sure that they can get set on init, check to see that the output changes accordingly
+    self.text = ""
+    @y_height = 3
+    @aspect_ratio = 0.5
+    @rows = 1
+    @cols = 0
+    
     if attrs.first.is_a?(String)
       self.text = attrs.first
     elsif attrs.first.is_a?(Hash)      
@@ -24,11 +31,6 @@ class PDF417
       end
     end
 
-    self.text ||= ""
-    @y_height = 3
-    @aspect_ratio = 0.5
-    @rows = 1
-    @cols = 0
     @blob = nil
   end
   
@@ -160,7 +162,7 @@ class PDF417
     lib.y_height = self.y_height.to_f
   
     (@blob = lib.to_blob)
-    if @blob.nil?
+    if @blob.nil? || @blob.empty?
       if lib.generation_error == Lib::PDF417_ERROR_TEXT_TOO_BIG
         raise GenerationError, "Text is too big"
       elsif lib.generation_error == Lib::PDF417_ERROR_INVALID_PARAMS
@@ -175,7 +177,7 @@ class PDF417
     else
       @codewords = lib.codewords
       @bit_columns = lib.bit_columns
-      # @bit_rows = (lib.bit_columns / 8) + 1
+      @bit_rows = (lib.bit_columns / 8) + 1
       @bit_length = lib.bit_length
       @rows = lib.code_rows 
       @cols = lib.code_columns
@@ -195,8 +197,6 @@ class PDF417
   
   def encoding
     self.generate! if @blob.nil?
-
-    cols = self.bit_columns / 8 + 1
     # The below sets it up so that @blob.unpack("B*").first == enc.join
     # The barby library has
     #         row << sprintf("%08b", (byte & 0xff) | 0x100)
@@ -219,14 +219,18 @@ class PDF417
     # NOTE:  Couldn't cols also be self.rows??
     
     # This matches the output from the pdf417 lib sample output, for each byte try sprintf("%02X", byte) to get the hex, or sprintf("%08b", byte) to get the binary
-    enc = b.blob.bytes.to_a.each_slice(cols).to_a
+    enc = self.blob.bytes.to_a.each_slice(self.bit_rows).to_a
     
     return enc.collect do |row_of_bytes|
       row_of_bytes.collect{|x| sprintf("%08b", x)}.join
     end
   end
-
   
+  def encoding_to_s
+    self.encoding.each{|x| puts x.gsub("0"," ")}
+  end
+
+ #.each{|x| puts x.gsub("0"," ")}
 
   
 end

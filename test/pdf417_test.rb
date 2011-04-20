@@ -62,6 +62,7 @@ class Pdf417Test < Test::Unit::TestCase
     assert_nothing_raised do
       b.to_blob
     end
+    assert_barcode b
   end
   
   context "after generating" do
@@ -74,6 +75,7 @@ class Pdf417Test < Test::Unit::TestCase
     should "have a blob" do
       assert_not_nil @barcode.blob
       assert_not_nil @barcode.to_blob
+      assert_barcode @barcode
     end
     
     should "know bit columns" do
@@ -81,7 +83,7 @@ class Pdf417Test < Test::Unit::TestCase
     end
     
     should "know bit rows" do
-      assert_not_nil @barcode.bit_length
+      assert_not_nil @barcode.bit_rows
     end
     
     should "know bit length" do
@@ -111,27 +113,33 @@ class Pdf417Test < Test::Unit::TestCase
     should "regenerate after rows changed" do
       @barcode.rows = 10
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
     
     should "regenerate after cols changed" do
       @barcode.cols = 10
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
     
     should "regenerate after error level changed" do
       @barcode.error_level = 7
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
     
     should "regenerate after raw codewords changed" do
       @barcode.raw_codewords = @barcode.codewords + [245, 123]
       @barcode.raw_codewords[0] = @barcode.raw_codewords.length
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
     
     should "regenerate invert bitmap changed" do
       @barcode.invert_bitmap = !@barcode.invert_bitmap
       assert_not_equal @blob, @barcode.to_blob
+      assert @barcode.to_blob
+      assert_inverse_barcode @barcode
     end
     
     should "regenerate after aspect ratio changed" do
@@ -144,6 +152,7 @@ class Pdf417Test < Test::Unit::TestCase
       @blob = @barcode.to_blob
       @barcode.aspect_ratio = 1000
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
 
     should "regenerate after y height changed" do
@@ -156,32 +165,33 @@ class Pdf417Test < Test::Unit::TestCase
       @blob = @barcode.to_blob
       @barcode.y_height = 4
       assert_not_equal @blob, @barcode.to_blob
+      assert_barcode @barcode
     end
   end
   
   should "know max rows after generating out of bounds" do
-    b = PDF417.new(:rows => 1000000, :text => "test")
+    b = PDF417.new(:rows => 10000000000, :text => "test")
     b.generate!
-    assert_not_equal 1000000, b.rows
+    assert_not_equal 10000000000, b.rows
   end
   
   
-  if Object.const_defined? "Magick"
-    context "using RMagick" do
-      setup do
-        @barcode = PDF417.new("test text" * 100)
-        @barcode.generate!
-      end
-      
-      should "make an image" do
-        # @barcode.to_blob.split(//).collect{|x| x.unpack("B*")}.to_s.inspect
-        image = Magick::Image::from_blob(@barcode.to_blob).first
-        puts "Width: #{image.columns}; Height: #{image.rows}"
-      end
-    end      
-  else
-    puts "*** Skipping rmagick tests"
-  end
+  # if Object.const_defined? "Magick"
+  #   context "using RMagick" do
+  #     setup do
+  #       @barcode = PDF417.new("test text" * 100)
+  #       @barcode.generate!
+  #     end
+  #     
+  #     should "make an image" do
+  #       # @barcode.to_blob.split(//).collect{|x| x.unpack("B*")}.to_s.inspect
+  #       image = Magick::Image::from_blob(@barcode.to_blob).first
+  #       puts "Width: #{image.columns}; Height: #{image.rows}"
+  #     end
+  #   end      
+  # else
+  #   puts "*** Skipping rmagick tests"
+  # end
   
   
   
