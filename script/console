@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+irb = RUBY_PLATFORM =~ /(:?mswin|mingw)/ ? 'irb.bat' : 'irb'
+libs =  " -r irb/completion"
+libs << " -I #{File.join(File.dirname(__FILE__), '..', 'lib')}"
+libs << " -I #{File.join(File.dirname(__FILE__), '..', 'ext')}"
+libs << " -r pdf417"
+exec "#{irb} #{libs} --simple-prompt"

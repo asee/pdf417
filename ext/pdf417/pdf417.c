@@ -38,7 +38,7 @@ void Init_pdf417() {
   rb_define_method(rb_cPdf417_Lib, "bit_columns", rb_pdf417_lib_bitColumns, 0);
   rb_define_method(rb_cPdf417_Lib, "bit_length", rb_pdf417_lib_lenBits, 0);
   rb_define_method(rb_cPdf417_Lib, "code_rows", rb_pdf417_lib_codeRows, 0);
-  rb_define_method(rb_cPdf417_Lib, "code_columns", rb_pdf417_lib_codeColumns, 0);
+  rb_define_method(rb_cPdf417_Lib, "code_cols", rb_pdf417_lib_codeColumns, 0);
   rb_define_method(rb_cPdf417_Lib, "codeword_length", rb_pdf417_lib_lenCodewords, 0);
   rb_define_method(rb_cPdf417_Lib, "error_level", rb_pdf417_lib_errorLevel, 0);
   rb_define_method(rb_cPdf417_Lib, "aspect_ratio", rb_pdf417_lib_aspectRatio, 0);
@@ -196,7 +196,7 @@ static VALUE rb_pdf417_lib_to_blob(VALUE self) {
   
   paintCode(ptr); 
   
-  if (ptr->error) {
+  if (ptr->error && ptr->error != PDF417_ERROR_SUCCESS) {
       return Qnil; //could also return list
   }
   
@@ -241,7 +241,7 @@ static VALUE rb_pdf417_lib_codeRows(VALUE self) {
 
 /*
  * call-seq:
- *  code_columns
+ *  code_cols
  *
  * The number of code columns
  */

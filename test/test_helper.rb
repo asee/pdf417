@@ -16,13 +16,21 @@ end
 def assert_barcode(barcode, msg = nil)
   full_message = build_message(msg, "? should have a valid PDF417 start and end sequence for each row", barcode)
   assert_block(full_message) do
-    barcode.encoding.any? && barcode.encoding.all?{|x| x.start_with?("11111111010101000") && x.end_with?("1111111010001010010") }
+    barcode.encoding.any? && barcode.encoding.all?{|x| x.start_with?("11111111010101000") && x.end_with?("111111101000101001") }
   end
 end
 
-def assert_inverse_barcode(barcode, msg = nil)
-  full_message = build_message(msg, "? should have a valid PDF417 start and end sequence for each row", barcode)
+def assert_barcode_start_sequence(barcode, msg = nil)
+  full_message = build_message(msg, "? should have a valid PDF417 start sequence for each row", barcode)
   assert_block(full_message) do
-    barcode.encoding.any? && barcode.encoding.all?{|x| x.start_with?("00000000101010111") && x.end_with?("0000000101110101101") }
+    barcode.encoding.any? && barcode.encoding.all?{|x| x.start_with?("11111111010101000")}
+  end
+end
+
+
+def assert_barcode_end_sequence(barcode, msg = nil)
+  full_message = build_message(msg, "? should have a valid PDF417 end sequence for each row", barcode)
+  assert_block(full_message) do
+    barcode.encoding.any? && barcode.encoding.all?{|x| x.end_with?("111111101000101001") }
   end
 end

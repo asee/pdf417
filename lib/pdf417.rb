@@ -34,6 +34,10 @@ class PDF417
     @blob = nil
   end
   
+  def inspect
+    "#<#{self.class.name}:#{self.object_id} >"
+  end
+  
   
   def text=(val)
     @codewords = @blob = nil
@@ -52,14 +56,10 @@ class PDF417
     return @raw_codewords if !@raw_codewords.nil?
     @codewords ||= self.class.encode_text(text)
   end
-    
-  def invert_bitmap?
-    !! self.invert_bitmap
-  end
-      
+          
   # Y Height
   def y_height
-    @text
+    @y_height
   end
   def y_height=(val)
     @blob = nil
@@ -110,17 +110,7 @@ class PDF417
     @blob = nil
     @error_level = val
   end
-    
-  # Invert the bitmap?
-  def invert_bitmap
-    @invert_bitmap
-  end
-  
-  def invert_bitmap=(val)
-    @blob = nil
-    @invert_bitmap = val
-  end
-  
+      
   def generate!
     lib = Lib.new(text)
     options = []
@@ -131,12 +121,7 @@ class PDF417
       lib.generation_options |= Lib::PDF417_USE_RAW_CODEWORDS
       options << 'raw codewords'
     end
-  
-    if self.invert_bitmap?
-      lib.generation_options |= Lib::PDF417_INVERT_BITMAP
-      options << 'inverting bitmap'
-    end
-  
+    
     if self.rows.to_i > 0 && self.cols.to_i > 0
       lib.code_rows = self.rows.to_i
       lib.code_cols = self.cols.to_i
@@ -161,7 +146,7 @@ class PDF417
     lib.aspect_ratio = self.aspect_ratio.to_f
     lib.y_height = self.y_height.to_f
   
-    (@blob = lib.to_blob)
+    (@blob = lib.to_blob) 
     if @blob.nil? || @blob.empty?
       if lib.generation_error == Lib::PDF417_ERROR_TEXT_TOO_BIG
         raise GenerationError, "Text is too big"
@@ -172,15 +157,15 @@ class PDF417
         end
         raise GenerationError, msg
       else
-        raise GenerationError, "Could not generate bitmap: #{options.join(', ')}"
+        raise GenerationError, "Could not generate bitmap error: #{options.join(', ')}"
       end
     else
       @codewords = lib.codewords
       @bit_columns = lib.bit_columns
-      @bit_rows = (lib.bit_columns / 8) + 1
+      @bit_rows = ((lib.bit_columns - 1) / 8) + 1
       @bit_length = lib.bit_length
       @rows = lib.code_rows 
-      @cols = lib.code_columns
+      @cols = lib.code_cols
       @error_level = lib.error_level
       @aspect_ratio = lib.aspect_ratio
       @y_height = lib.y_height
@@ -219,10 +204,12 @@ class PDF417
     # NOTE:  Couldn't cols also be self.rows??
     
     # This matches the output from the pdf417 lib sample output, for each byte try sprintf("%02X", byte) to get the hex, or sprintf("%08b", byte) to get the binary
-    enc = self.blob.bytes.to_a.each_slice(self.bit_rows).to_a
+    enc = self.blob.bytes.to_a.each_slice(self.bit_rows).to_a[0..(self.rows-1)] # sometimes we get more rows than expected, truncate
     
+    # The length returned here is too long and we have extra data that gets padded w/ zeroes, meaning it doesn't all match.
+    # Eg, instead of ending with "111111101000101001" it ends with "1111111010001010010000000".
     return enc.collect do |row_of_bytes|
-      row_of_bytes.collect{|x| sprintf("%08b", x)}.join
+      row_of_bytes.collect{|x| sprintf("%08b", x)}.join[0..self.bit_columns-1]
     end
   end
   

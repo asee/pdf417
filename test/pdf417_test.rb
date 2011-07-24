@@ -44,7 +44,7 @@ class Pdf417Test < Test::Unit::TestCase
     b = PDF417.new("fred")
     fred_words = b.codewords
     fred_blob = b.to_blob
-    b.invert_bitmap = ! b.invert_bitmap
+    b.rows = b.rows + 4
     assert_equal fred_words, b.codewords # NOTE that the codewords have not changed, just the binary blob
     assert fred_blob != b.to_blob    
   end
@@ -125,7 +125,8 @@ class Pdf417Test < Test::Unit::TestCase
     should "regenerate after error level changed" do
       @barcode.error_level = 7
       assert_not_equal @blob, @barcode.to_blob
-      assert_barcode @barcode
+      assert_barcode_start_sequence @barcode
+      assert_barcode_end_sequence @barcode
     end
     
     should "regenerate after raw codewords changed" do
@@ -134,14 +135,7 @@ class Pdf417Test < Test::Unit::TestCase
       assert_not_equal @blob, @barcode.to_blob
       assert_barcode @barcode
     end
-    
-    should "regenerate invert bitmap changed" do
-      @barcode.invert_bitmap = !@barcode.invert_bitmap
-      assert_not_equal @blob, @barcode.to_blob
-      assert @barcode.to_blob
-      assert_inverse_barcode @barcode
-    end
-    
+        
     should "regenerate after aspect ratio changed" do
       # Aspect ratio does not apply when both rows and cols are set, so re-set our 
       # reference and make sure there is enough data to have rows and cols
@@ -152,27 +146,15 @@ class Pdf417Test < Test::Unit::TestCase
       @blob = @barcode.to_blob
       @barcode.aspect_ratio = 1000
       assert_not_equal @blob, @barcode.to_blob
-      assert_barcode @barcode
-    end
-
-    should "regenerate after y height changed" do
-      # Y Height does not apply when both rows and cols are set, so re-set our 
-      # reference and make sure there is enough data to have rows and cols
-      @barcode.text = "SOME REALLY LONG TEXT HERE! Gonna need some rows...." * 10
-      @barcode.rows = nil
-      @barcode.cols = 2
-      @barcode.error_level = 3
-      @blob = @barcode.to_blob
-      @barcode.y_height = 4
-      assert_not_equal @blob, @barcode.to_blob
-      assert_barcode @barcode
+      assert_barcode_start_sequence @barcode
+      assert_barcode_end_sequence @barcode
     end
   end
   
   should "know max rows after generating out of bounds" do
-    b = PDF417.new(:rows => 10000000000, :text => "test")
+    b = PDF417.new(:rows => 10000, :text => "test")
     b.generate!
-    assert_not_equal 10000000000, b.rows
+    assert_not_equal 10000, b.rows
   end
   
   
