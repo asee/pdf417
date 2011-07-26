@@ -182,28 +182,8 @@ class PDF417
   
   def encoding
     self.generate! if @blob.nil?
-    # The below sets it up so that @blob.unpack("B*").first == enc.join
-    # The barby library has
-    #         row << sprintf("%08b", (byte & 0xff) | 0x100)
-    # Not sure what that's about, Binary OR Operator copies a bit if it exists in eather operand 0x100 = 265, eg, ensuring everything is >= 256
-    # Enc yields an array of strings, such as:
-    # ["11111111010101000111010101110000001111010100111100010000010111011100111101010111100001111111010001010010", "11111111010101000111101010010000001110001001101000010100111111011100111110101011000001111111010001010010", "11111111010101000111010101111110001010010001111000010111100111011100101010011110000001111111010001010010", "011010110100111001001111010101000100111101010000"]
-    # enc = []
-    # row = nil
-    # n = 0
-    # @blob.each_byte do |byte|
-    #   if n%cols == 0
-    #     row = ""
-    #     enc << row
-    #   end
-    #   row << sprintf("%08b", (byte & 0xff))
-    #   n += 1
-    # end
-    # enc
     
-    # NOTE:  Couldn't cols also be self.rows??
-    
-    # This matches the output from the pdf417 lib sample output, for each byte try sprintf("%02X", byte) to get the hex, or sprintf("%08b", byte) to get the binary
+    # This matches the output from the pdf417 lib sample output.
     enc = self.blob.bytes.to_a.each_slice(self.bit_rows).to_a[0..(self.rows-1)] # sometimes we get more rows than expected, truncate
     
     # The length returned here is too long and we have extra data that gets padded w/ zeroes, meaning it doesn't all match.
@@ -216,8 +196,37 @@ class PDF417
   def encoding_to_s
     self.encoding.each{|x| puts x.gsub("0"," ")}
   end
+  
+  def to_png(opts = {})
+    require 'chunky_png' unless defined?(ChunkyPNG)
+    
+    self.generate! if @blob.nil?
+    opts[:x_scale] ||= 1
+    opts[:y_scale] ||= 3
+    opts[:margin] ||= 10
+    full_width = (self.bit_columns * opts[:x_scale]) + (opts[:margin] * 2)
+    full_height = (self.rows * opts[:y_scale]) + (opts[:margin] * 2)
+    
+    canvas = ChunkyPNG::Image.new(full_width, full_height, ChunkyPNG::Color::WHITE)
 
- #.each{|x| puts x.gsub("0"," ")}
-
+    x, y = opts[:margin], opts[:margin]
+    booleans = encoding.map{|l| l.split(//).map{|c| c == '1' } }
+    booleans.each do |line|
+      line.each do |bar|
+        if bar
+          x.upto(x+(opts[:x_scale]-1)) do |xx|
+            y.upto y+(opts[:y_scale]-1) do |yy|
+              canvas[xx,yy] = ChunkyPNG::Color::BLACK
+            end
+          end
+        end
+        x += opts[:x_scale]
+      end
+      y += opts[:y_scale]
+      x = opts[:margin]
+    end
+    canvas.to_datastream.to_s    
+  end
+    
   
 end

@@ -3,5 +3,8 @@ irb = RUBY_PLATFORM =~ /(:?mswin|mingw)/ ? 'irb.bat' : 'irb'
 libs =  " -r irb/completion"
 libs << " -I #{File.join(File.dirname(__FILE__), '..', 'lib')}"
 libs << " -I #{File.join(File.dirname(__FILE__), '..', 'ext')}"
+libs << " -I #{File.join(File.dirname(__FILE__), '..', '..', 'barby')}"
 libs << " -r pdf417"
+libs << " -r rubygems"
+#libs << " -r chunky_png"
 exec "#{irb} #{libs} --simple-prompt"
