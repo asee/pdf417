@@ -23,12 +23,18 @@ There are a few ways to use the library, at its simplest:
 
   PDF417.encode_text("readable barcode data") => [12, 827, 120, 90, 41, 146, 30, 512, 423, 146, 90, 570]
   
-If you want to get the bitmap:
+If you want to get the raw barcode data from the PDF417 library:
 
  barcode = PDF417.new("readable barcode data")
  barcode.to_blob  # oops, wrong text
  barcode.text = "ACTUAL barcode data"
  barcode.to_blob
+ 
+If you want to get it as an array of strings (each array element representing a line)
+  barcode.encoding
+  
+If you have chunky_png installed and you'd rather have a PNG
+  barcode.to_png
  
 See the RDocs for more information.
 
