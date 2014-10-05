@@ -197,7 +197,7 @@ class PDF417
     self.encoding.each{|x| puts x.gsub("0"," ")}
   end
   
-  def to_png(opts = {})
+  def to_chunky_png(opts = {})
     require 'chunky_png' unless defined?(ChunkyPNG)
     
     self.generate! if @blob.nil?
@@ -225,7 +225,11 @@ class PDF417
       y += opts[:y_scale]
       x = opts[:margin]
     end
-    canvas.to_datastream.to_s    
+    canvas
+  end
+
+  def to_png(opts = {})
+    to_chunky_png(opts).to_datastream.to_s
   end
     
   
