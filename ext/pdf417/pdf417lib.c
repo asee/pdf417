@@ -839,7 +839,9 @@ void paintCode(pPdf417param p) {
     if (tot > MAX_DATA_CODEWORDS + 2) {
         tot = getMaxSquare(p);
     }
-    p->errorLevel = maxPossibleErrorLevel(tot - p->lenCodewords);
+    if (!(p->options & PDF417_USE_ERROR_LEVEL)) {
+        p->errorLevel = maxPossibleErrorLevel(tot - p->lenCodewords);
+    }
     lenErr = 2 << p->errorLevel;
     pad = tot - lenErr - p->lenCodewords;
     pp.cwPtr = p->lenCodewords;
