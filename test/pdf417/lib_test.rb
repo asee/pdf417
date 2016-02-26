@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PDF417::Lib::LibTest < Test::Unit::TestCase
+class PDF417::Lib::LibTest <  Minitest::Test
   
   should "initialize text" do
     b = PDF417::Lib.new("fred")
@@ -58,7 +58,11 @@ class PDF417::Lib::LibTest < Test::Unit::TestCase
     data_with_null_byptes = ['01', '01', '00', '00', '00', '00']
     with_null_bytes = PDF417::Lib.encode_text([data_with_null_byptes.join].pack("H*"))
     
-    assert_not_equal with_null_bytes, without_null_bytes
+    refute_equal with_null_bytes, without_null_bytes
+  end
+  
+  should "not fail with empty text" do
+    assert_equal [], PDF417::Lib.encode_text("")
   end
   
   

@@ -5,7 +5,7 @@ end
 
 require 'test_helper'
 
-class Pdf417Test < Test::Unit::TestCase
+class Pdf417Test <  Minitest::Test
   
   should "initialize text as an attr" do
     b = PDF417.new(:text => "fred")
@@ -59,8 +59,10 @@ class Pdf417Test < Test::Unit::TestCase
     b = PDF417.new
     b.raw_codewords = [4, 815, 514, 119]
     assert_equal [4, 815, 514, 119], b.codewords
-    assert_nothing_raised do
+    begin
       b.to_blob
+    rescue Exception => e
+      assert false, "Expected nothing raised, instead got #{e.message}"
     end
     assert_barcode b
   end
@@ -73,58 +75,58 @@ class Pdf417Test < Test::Unit::TestCase
     end
     
     should "have a blob" do
-      assert_not_nil @barcode.blob
-      assert_not_nil @barcode.to_blob
+      refute_nil @barcode.blob
+      refute_nil @barcode.to_blob
       assert_barcode @barcode
     end
     
     should "know bit columns" do
-      assert_not_nil @barcode.bit_columns
+      refute_nil @barcode.bit_columns
     end
     
     should "know bit rows" do
-      assert_not_nil @barcode.bit_rows
+      refute_nil @barcode.bit_rows
     end
     
     should "know bit length" do
-      assert_not_nil @barcode.bit_length
+      refute_nil @barcode.bit_length
     end
     
     should "know rows" do
-      assert_not_nil @barcode.rows
+      refute_nil @barcode.rows
     end
     
     should "know cols" do
-      assert_not_nil @barcode.cols
+      refute_nil @barcode.cols
     end
     
     should "know error level" do
-      assert_not_nil @barcode.error_level
+      refute_nil @barcode.error_level
     end
     
     should "know aspect ratio" do
-      assert_not_nil @barcode.aspect_ratio
+      refute_nil @barcode.aspect_ratio
     end
     
     should "know y height" do
-      assert_not_nil @barcode.y_height
+      refute_nil @barcode.y_height
     end
     
     should "regenerate after rows changed" do
       @barcode.rows = 10
-      assert_not_equal @blob, @barcode.to_blob
+      refute_equal @blob, @barcode.to_blob
       assert_barcode @barcode
     end
     
     should "regenerate after cols changed" do
       @barcode.cols = 10
-      assert_not_equal @blob, @barcode.to_blob
+      refute_equal @blob, @barcode.to_blob
       assert_barcode @barcode
     end
     
     should "regenerate after error level changed" do
       @barcode.error_level = 7
-      assert_not_equal @blob, @barcode.to_blob
+      refute_equal @blob, @barcode.to_blob
       assert_barcode_start_sequence @barcode
       assert_barcode_end_sequence @barcode
     end
@@ -132,7 +134,7 @@ class Pdf417Test < Test::Unit::TestCase
     should "regenerate after raw codewords changed" do
       @barcode.raw_codewords = @barcode.codewords + [245, 123]
       @barcode.raw_codewords[0] = @barcode.raw_codewords.length
-      assert_not_equal @blob, @barcode.to_blob
+      refute_equal @blob, @barcode.to_blob
       assert_barcode @barcode
     end
         
@@ -145,7 +147,7 @@ class Pdf417Test < Test::Unit::TestCase
       @barcode.error_level = 3
       @blob = @barcode.to_blob
       @barcode.aspect_ratio = 1000
-      assert_not_equal @blob, @barcode.to_blob
+      refute_equal @blob, @barcode.to_blob
       assert_barcode_start_sequence @barcode
       assert_barcode_end_sequence @barcode
     end
@@ -154,7 +156,7 @@ class Pdf417Test < Test::Unit::TestCase
   should "know max rows after generating out of bounds" do
     b = PDF417.new(:rows => 10000, :text => "test")
     b.generate!
-    assert_not_equal 10000, b.rows
+    refute_equal 10000, b.rows
   end
   
   
