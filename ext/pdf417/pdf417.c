@@ -59,6 +59,7 @@ static VALUE rb_pdf417_lib_encode_text(VALUE self, VALUE text) {
   pdf417param p;
   pdf417init(&p);
   p.text = StringValuePtr(text);
+  p.lenText = (int)RSTRING_LEN(text);
   fetchCodewords(&p);
   if (p.error) {
       pdf417free(&p);
@@ -118,6 +119,7 @@ static VALUE rb_pdf417_lib_codewords(VALUE self) {
   text = rb_iv_get(self, "@text"); 
   pdf417init(&p);
   p.text = StringValuePtr(text);
+  p.lenText = (int)RSTRING_LEN(text);
   fetchCodewords(&p);
   if (p.error) {
       pdf417free(&p);
@@ -160,6 +162,7 @@ static VALUE rb_pdf417_lib_to_blob(VALUE self) {
   
   // Always set the text, can't really go wrong here
   ptr->text = StringValuePtr(text);
+  ptr->lenText = (int)RSTRING_LEN(text);
   
   // Start setting them based off of what we got
   if ( TYPE(generation_options) == T_FIXNUM ){
