@@ -160,7 +160,11 @@ class PDF417
         raise GenerationError, "Could not generate bitmap error: #{options.join(', ')}"
       end
     else
-      @codewords = lib.codewords
+      if lib.raw_codewords.is_a?(Array)
+        @codewords = lib.raw_codewords
+      else
+        @codewords = lib.codewords
+      end
       @bit_columns = lib.bit_columns
       @bit_rows = ((lib.bit_columns - 1) / 8) + 1
       @bit_length = lib.bit_length
