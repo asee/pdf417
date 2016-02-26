@@ -51,5 +51,15 @@ class PDF417::Lib::LibTest < Test::Unit::TestCase
     assert b.codewords.is_a?(Array)
   end
   
+  should "encode a complete ruby string with null bytes" do
+    data_without_null_byptes = ['01', '01']
+    without_null_bytes = PDF417::Lib.encode_text([data_without_null_byptes.join].pack("H*"))
+
+    data_with_null_byptes = ['01', '01', '00', '00', '00', '00']
+    with_null_bytes = PDF417::Lib.encode_text([data_with_null_byptes.join].pack("H*"))
+    
+    assert_not_equal with_null_bytes, without_null_bytes
+  end
+  
   
 end
