@@ -53,6 +53,9 @@ void Init_pdf417() {
  * Returns an array of integers showing the codewords
  */
 static VALUE rb_pdf417_lib_encode_text(VALUE self, VALUE text) {
+  
+  Check_Type(text, T_STRING);
+  
   VALUE list;
   int k;
   
@@ -117,6 +120,8 @@ static VALUE rb_pdf417_lib_codewords(VALUE self) {
   
   
   text = rb_iv_get(self, "@text"); 
+  Check_Type(text, T_STRING);
+  
   pdf417init(&p);
   p.text = StringValuePtr(text);
   p.lenText = (int)RSTRING_LEN(text);
@@ -156,6 +161,8 @@ static VALUE rb_pdf417_lib_to_blob(VALUE self) {
   error_level = rb_iv_get(self, "@error_level");
   code_rows = rb_iv_get(self, "@code_rows");
   code_cols = rb_iv_get(self, "@code_cols");
+  
+  Check_Type(text, T_STRING);
   
   // re-set our internal variables
   pdf417init(ptr);
