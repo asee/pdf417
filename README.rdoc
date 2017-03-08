@@ -68,8 +68,8 @@ If you want to know the barcode image size in pixel
 
 If you want to use in Prawn
 
- pdf.image(barcode.to_png(margin: 0, x_scale: 2, y_scale: 6), at: pos)
- pdf.image(barcode.to_chunky_png(margin: 0, x_scale: 2, y_scale: 6).to_blob, at: pos)
+ pdf.image(StringIO.new(barcode.to_png(margin: 0, x_scale: 2, y_scale: 6)), at: pos)
+ pdf.image(StringIO.new(barcode.to_chunky_png(margin: 0, x_scale: 2, y_scale: 6).to_blob), at: pos)
 
 See the RDocs for more information.
 
