@@ -16,7 +16,60 @@ class Pdf417Test <  Minitest::Test
     b = PDF417.new("fred")
     assert_equal "fred", b.text
   end
-    
+
+  should "defaults rows and cols to nil" do
+    b = PDF417.new("fred")
+    assert_nil b.rows
+    assert_nil b.cols
+  end
+
+  should "allows fixed cols" do
+    b = PDF417.new(text: "01234"*60, error_level: 6, cols: 5)
+    b.to_blob
+    assert_equal [5, 47], [b.cols, b.rows]
+
+    # if it's too small, auto determine the best value
+    b = PDF417.new(text: "01234"*60, error_level: 6, cols: 1)
+    b.to_blob
+    assert_equal [3, 90], [b.cols, b.rows]
+
+    # if it's too big, auto determine the best value
+    b = PDF417.new(text: "01234"*60, error_level: 6, cols: 100)
+    b.to_blob
+    assert_equal [30, 8], [b.cols, b.rows]
+  end
+
+  should "allows fixed rows" do
+    b = PDF417.new(text: "01234"*60, error_level: 6, rows: 10)
+    b.to_blob
+    assert_equal [24, 10], [b.cols, b.rows]
+
+    # if it's too small, auto determine the best value
+    b = PDF417.new(text: "01234"*60, error_level: 6, rows: 6)
+    b.to_blob
+    assert_equal [30, 8], [b.cols, b.rows]
+
+    # if it's too big, auto determine the best value
+    b = PDF417.new(text: "01234"*60, error_level: 6, rows: 100)
+    b.to_blob
+    assert_equal [3, 90], [b.cols, b.rows]
+  end
+
+  should "let default aspect_ratio to define rows and cols" do
+    b = PDF417.new(text: "01234"*60, error_level: 6)
+    b.to_blob
+    assert_equal 7, b.cols
+    assert_equal 34, b.rows
+  end
+
+  should "let custom aspect_ratio to define rows and cols" do
+    b = PDF417.new(text: "01234"*60, aspect_ratio: 0.618,
+                   error_level: 6)
+    b.to_blob
+    assert_equal 6, b.cols
+    assert_equal 39, b.rows
+  end
+
   should "know the right codewords for fred" do
     assert_equal [4, 815, 514, 119], PDF417.encode_text("fred")
     assert_equal [4, 815, 514, 119], PDF417.new(:text => "fred").codewords
@@ -143,11 +196,16 @@ class Pdf417Test <  Minitest::Test
       # reference and make sure there is enough data to have rows and cols
       @barcode.text = "SOME REALLY LONG TEXT HERE! Gonna need some rows...." * 10
       @barcode.rows = nil
-      @barcode.cols = 2
+      @barcode.cols = 10 # fixed cols input
       @barcode.error_level = 3
       @blob = @barcode.to_blob
+      assert_equal [10, 30], [@barcode.cols, @barcode.rows] # cols is fixed at 10
+
       @barcode.aspect_ratio = 1000
-      refute_equal @blob, @barcode.to_blob
+      new_blob = @barcode.to_blob
+      assert_equal [4, 90], [@barcode.cols, @barcode.rows] # new cols and rows are defined
+
+      refute_equal @blob, new_blob
       assert_barcode_start_sequence @barcode
       assert_barcode_end_sequence @barcode
     end
