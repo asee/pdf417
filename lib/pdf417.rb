@@ -18,8 +18,8 @@ class PDF417
     self.text = ""
     @y_height = 3
     @aspect_ratio = 0.5
-    @rows = 1
-    @cols = 0
+    @rows = nil
+    @cols = nil
     
     if attrs.first.is_a?(String)
       self.text = attrs.first
@@ -72,6 +72,8 @@ class PDF417
   end
   def aspect_ratio=(val)
     @blob = nil
+    @rows = nil
+    @cols = nil
     @aspect_ratio = val
   end
     
