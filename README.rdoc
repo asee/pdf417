@@ -25,17 +25,52 @@ There are a few ways to use the library, at its simplest:
   
 If you want to get the raw barcode data from the PDF417 library:
 
- barcode = PDF417.new("readable barcode data")
- barcode.to_blob  # oops, wrong text
- barcode.text = "ACTUAL barcode data"
- barcode.to_blob
- 
+  barcode = PDF417.new("readable barcode data")
+  barcode.to_blob  # oops, wrong text
+  barcode.text = "ACTUAL barcode data"
+  barcode.to_blob
+
 If you want to get it as an array of strings (each array element representing a line)
+
   barcode.encoding
   
+If you want to use fixed rows or cols
+
+  barcode = PDF417.new(text: "barcode data" * 20, cols: 3) # fixed cols
+  barcode.to_blob
+  [barcode.cols, barcode.rows] # => [3, 42]
+  barcode = PDF417.new(text: "barcode data" * 20, rows: 2) # fixed rows
+  barcode.to_blob
+  [barcode.cols, barcode.rows] # => [30, 5]
+
+If you want to use aspect ratio to determine rows and cols 
+
+  barcode = PDF417.new(text: "barcode data" * 20, aspect_ratio: 0.618)
+  barcode.to_blob
+  [barcode.cols, barcode.rows] # => [4, 31]
+
+If you want to change error level (maximum 8)
+
+  barcode = PDF417.new(text: "barcode data" * 20, error_level: 6)
+  barcode.to_blob
+  [barcode.cols, barcode.rows] # => [8, 32]
+
 If you have chunky_png installed and you'd rather have a PNG
-  barcode.to_png
- 
+
+  barcode.to_png # 1x1 scale
+  barcode.to_png(margin: 0, x_scale: 1, y_scale: 3) # stretch 3 times in the vertical direction
+
+If you want to know the barcode image size in pixel
+
+ barcode = PDF417.new(text: "barcode data" * 20, aspect_ratio: 0.618, error_level: 6)
+ cimg = barcode.to_chunky_png(margin: 0, x_scale: 2, y_scale: 6)
+ [cimg.width, cimg.height] # => [376, 216]
+
+If you want to use in Prawn
+
+ pdf.image(StringIO.new(barcode.to_png(margin: 0, x_scale: 2, y_scale: 6)), at: pos)
+ pdf.image(StringIO.new(barcode.to_chunky_png(margin: 0, x_scale: 2, y_scale: 6).to_blob), at: pos)
+
 See the RDocs for more information.
 
 == Note on Patches/Pull Requests
