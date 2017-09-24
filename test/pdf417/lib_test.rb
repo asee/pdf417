@@ -1,6 +1,10 @@
 require 'test_helper'
 
 class PDF417::Lib::LibTest <  Minitest::Test
+
+  should "not fail init with empty text" do
+    assert PDF417::Lib.new(text: '')
+  end
   
   should "initialize text" do
     b = PDF417::Lib.new("fred")
@@ -61,9 +65,8 @@ class PDF417::Lib::LibTest <  Minitest::Test
     refute_equal with_null_bytes, without_null_bytes
   end
   
-  should "not fail with empty text" do
+  should "not fail encode_text with empty text" do
     assert_equal [], PDF417::Lib.encode_text("")
-  end
-  
+  end  
   
 end

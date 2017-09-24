@@ -63,16 +63,20 @@ static VALUE rb_pdf417_lib_encode_text(VALUE self, VALUE text) {
   pdf417init(&p);
   p.text = StringValuePtr(text);
   p.lenText = (int)RSTRING_LEN(text);
+
+  if(p.lenText == 0){
+    return rb_ary_new2(0);
+  }
+
   fetchCodewords(&p);
   if (p.error) {
       pdf417free(&p);
       return Qnil; //could also return list or raise something
   }
-  
+
   list = rb_ary_new2(p.lenCodewords);
-  
+
   pdf417free(&p); 
-  
   for (k = 0; k < p.lenCodewords; ++k) {
     rb_ary_push(list, INT2NUM(p.codewords[k]));
   }
@@ -125,6 +129,11 @@ static VALUE rb_pdf417_lib_codewords(VALUE self) {
   pdf417init(&p);
   p.text = StringValuePtr(text);
   p.lenText = (int)RSTRING_LEN(text);
+
+  if(p.lenText == 0){
+    return rb_ary_new2(0);
+  }
+
   fetchCodewords(&p);
   if (p.error) {
       pdf417free(&p);
