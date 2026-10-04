@@ -30,6 +30,10 @@
 void Init_pdf417() {
   rb_cPdf417 = rb_define_class("PDF417", rb_cObject); // Our PDF417 object    
   rb_cPdf417_Lib = rb_define_class_under(rb_cPdf417, "Lib", rb_cObject); // Our PDF417::Lib object, to represent the C file
+  // Lib.new builds its object itself (Data_Make_Struct below), so the class
+  // must not keep Object's default allocator: Ruby 3.4 warns "undefining the
+  // allocator of T_DATA class PDF417::Lib" on every instantiation otherwise.
+  rb_undef_alloc_func(rb_cPdf417_Lib);
   rb_define_singleton_method(rb_cPdf417_Lib, "encode_text", rb_pdf417_lib_encode_text, 1);
   rb_define_singleton_method(rb_cPdf417_Lib, "new", rb_pdf417_lib_new, 1);
   rb_define_method(rb_cPdf417_Lib, "initialize", rb_pdf417_lib_init, 1);
